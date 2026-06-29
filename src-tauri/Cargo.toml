@@ -1,0 +1,32 @@
+[package]
+name = "xpad-smalldeck"
+version = "0.1.0"
+description = "XPAD Small Deck — launch software from F13–F24 keys"
+authors = ["XTIA"]
+edition = "2021"
+
+# The library is what Tauri builds; main.rs is a thin launcher that calls run().
+[lib]
+name = "xpad_smalldeck_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [ "tray-icon"] }
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-notification = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusb = { version = "0.9", features = ["vendored"] }
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

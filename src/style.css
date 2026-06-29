@@ -1,0 +1,544 @@
+/* XPAD Small Deck — Claude-desktop layout with the XPAD cool-grey / blue palette. */
+:root {
+  --bg:            #FFFFFF;  /* pure white canvas (matches the website) */
+  --surface:       #FFFFFF;  /* white cards/inputs within the content */
+  --surface-2:     #E5EAF1;  /* subtle cool fill */
+  --ink:           #11161F;
+  --ink-2:         #2E3849;
+  --ink-3:         #525D6F;
+  --ink-4:         #7B8597;
+  --line:          #D5DAE2;
+  --line-2:        #E2E6EC;
+  --brand:         #4F77AE;  /* XPAD blue accent */
+  --brand-ink:     #3A5B8A;
+  --brand-soft:    #E8EFF8;
+  --key-soft:      #D6E2F1;  /* assigned-cell tint (mirrors generator matrix) */
+  --key-line:      #8FACD0;
+  --danger:        #b4423a;
+  /* RGB triplet for translucent accents */
+  --brand-rgb:     79, 119, 174;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  /* Pure-white canvas so the embedded Docs page (a white wiki) blends in with
+     no jarring colour change. The cool-grey tone now lives only in the
+     floating sidebar, which keeps the layered depth against the white. */
+  background: #FFFFFF;
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+               "Microsoft YaHei", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── App shell: floating panels on the window material (Claude-desktop) ────── */
+body { display: flex; flex-direction: column; height: 100vh; }
+
+/* Full-width draggable strip that clears the macOS traffic lights (integrated
+   title bar). Windows/Linux keep their native title bar, so the strip is hidden
+   there to avoid a redundant second bar. */
+.titlebar { flex: 0 0 34px; }
+.os-win .titlebar,
+.os-linux .titlebar { display: none; }
+
+.app {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 10px;
+  /* The gaps/padding let the window vibrancy show as a margin around the
+     floating panels, giving the layered, "panels on glass" depth. */
+  padding: 0 10px 10px;
+}
+
+/* Left sidebar = a floating, translucent panel (not an edge-to-edge column). */
+.sidebar {
+  flex: 0 0 186px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  /* Cool-grey panel on the white canvas — carries the layered depth now that
+     the content area is white (Finder-style grey rail vs white content). */
+  background: rgba(229, 234, 241, 0.85);
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 13px;
+  box-shadow: 0 1px 2px rgba(17,22,31,0.05), 0 8px 24px rgba(17,22,31,0.10);
+}
+
+.brand-mark { font-weight: 800; letter-spacing: 0.6px; font-size: 16px; color: var(--ink); }
+.brand-sub { font-size: 12px; color: var(--ink-3); }
+
+.sidebar-nav { display: flex; flex-direction: column; gap: 2px; }
+.sidebar-footer { margin-top: auto; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  border-radius: 9px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  transition: background .12s, color .12s;
+}
+.nav-item:hover { background: rgba(var(--brand-rgb),0.12); color: var(--brand-ink); }
+.nav-item.active { background: rgba(var(--brand-rgb),0.15); color: var(--brand-ink); font-weight: 600; }
+.nav-ico { width: 17px; height: 17px; flex: 0 0 auto; opacity: 0.85; }
+.nav-plain { color: var(--ink-3); }
+.nav-quit:hover { background: rgba(180,66,58,0.10); color: var(--danger); }
+
+.lang { display: flex; gap: 6px; }
+.lang-btn {
+  background: rgba(255,255,255,0.6);
+  color: var(--ink-3);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background .12s, color .12s;
+}
+.lang-btn:hover { color: var(--brand-ink); border-color: var(--brand); }
+.lang-btn.active { background: var(--brand); color: #fff; border-color: var(--brand-ink); font-weight: 700; }
+
+/* Main content = an open area on the cream canvas (no card), like Claude. */
+.content {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: transparent;
+}
+.view { flex: 1 1 auto; min-height: 0; }
+.view-pad { overflow-y: auto; padding: 22px 22px 26px; }
+.view-docs { display: flex; flex-direction: column; }
+.intro { color: var(--ink-3); margin: 0 0 16px; line-height: 1.5; }
+
+/* ── Small Deck view: header, status pill, view toggle, empty state ───────── */
+.deck-inner { max-width: 760px; }
+
+.view-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.view-head-text { min-width: 0; }
+.view-title { margin: 0 0 4px; font-size: 20px; font-weight: 800; letter-spacing: 0.2px; color: var(--ink); }
+.view-sub { margin: 0; color: var(--ink-3); font-size: 13px; line-height: 1.5; }
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-4); flex: 0 0 auto; }
+.status-pill.on { background: var(--brand-soft); border-color: var(--key-line); color: var(--brand-ink); }
+.status-pill.on .dot { background: #36A95A; }
+
+.toolbar .show-all { margin-left: auto; }
+
+.seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+.seg-btn {
+  border: none;
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.seg-btn:hover:not(:disabled):not(.active) { color: var(--brand-ink); }
+.seg-btn.active { background: var(--surface); color: var(--brand-ink); box-shadow: 0 1px 2px rgba(17,22,31,0.08); }
+.seg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 54px 20px;
+}
+.empty-ico { width: 54px; height: 54px; color: var(--ink-4); opacity: 0.65; }
+.empty-title { font-size: 15px; font-weight: 700; color: var(--ink-2); }
+.empty-desc { max-width: 380px; margin: 0; font-size: 13px; line-height: 1.6; color: var(--ink-4); }
+.empty-actions { display: flex; gap: 10px; margin-top: 6px; }
+.empty-note { max-width: 380px; margin: 2px 0 0; font-size: 12px; line-height: 1.5; color: var(--ink-4); }
+
+/* ── Deck layout: scrollable grid/list above, docked inspector below ───────── */
+.deck-view { flex-direction: column; }
+.deck-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 22px 22px 26px; }
+
+.inspector {
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 22px 15px;
+  /* Thin dashed divider from the grid above; no fill, no shadow. */
+  border-top: 1px dashed var(--line);
+  background: transparent;
+}
+.insp-head { display: flex; align-items: center; gap: 12px; }
+.insp-key {
+  flex: 0 0 auto;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--brand-ink);
+  font-variant-numeric: tabular-nums;
+}
+.inspector .modal-body { flex: 1 1 auto; min-height: 0; margin: 0; }
+
+/* Selection highlight (matrix cell + list row) */
+.mcell.fkey.selected { border-color: var(--brand); box-shadow: 0 0 0 2px rgba(var(--brand-rgb),0.40); }
+.row.selected { border-color: var(--brand); box-shadow: 0 0 0 2px rgba(var(--brand-rgb),0.30); }
+.row:not(.row-disabled) { cursor: pointer; }
+.row-go { margin-left: auto; flex: 0 0 auto; color: var(--ink-4); font-size: 20px; line-height: 1; }
+
+/* ── Embedded Docs view ──────────────────────────────────────────────────── */
+.docview-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--line-2);
+  flex: 0 0 auto;
+}
+.docview-title { font-weight: 700; color: var(--ink-2); font-size: 13px; }
+.docview-notice {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+/* Home notice + "Open in browser" boxed together as a card. */
+.notice-card {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: 0 0 auto;
+  margin: 14px 16px 12px;
+  padding: 11px 13px;
+  border: 1px solid var(--key-line);
+  border-radius: 10px;
+  background: var(--brand-soft);
+}
+.notice-card .docview-notice { color: var(--ink-2); }
+.notice-ico { width: 18px; height: 18px; flex: 0 0 auto; color: var(--brand); }
+.docview-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  border-radius: 7px;
+  padding: 6px 11px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color .12s, color .12s;
+}
+.docview-btn:hover { border-color: var(--brand); color: var(--brand-ink); }
+.docview-btn svg { width: 14px; height: 14px; }
+.docview-frame { flex: 1 1 auto; width: 100%; border: none; background: #fff; }
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.show-all, .autostart {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.btn {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  border-radius: 8px;
+  padding: 7px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background .12s, border-color .12s;
+}
+.btn:hover { border-color: var(--brand); color: var(--brand-ink); }
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand), var(--brand-ink));
+  color: #fff;
+  border-color: var(--brand-ink);
+}
+.btn-primary:hover { color: #fff; filter: brightness(1.05); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-ghost { background: transparent; }
+.btn-danger { color: var(--danger); border-color: #e4b7b3; }
+.btn-danger:hover { border-color: var(--danger); color: var(--danger); }
+
+/* ── Status banner ───────────────────────────────────────────────────────── */
+.status {
+  border-radius: 8px;
+  padding: 9px 12px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+.status.ok  { background: #e4f3e8; color: #1f6b39; border: 1px solid #b7ddc3; }
+.status.err { background: #fbe9e7; color: #9e342c; border: 1px solid #f0c2bc; }
+
+/* ── Key rows ────────────────────────────────────────────────────────────── */
+.rows { display: flex; flex-direction: column; gap: 10px; }
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  /* Soft resting elevation (not just on hover) lifts cards off the material. */
+  box-shadow: 0 1px 2px rgba(17,22,31,0.05), 0 6px 16px rgba(17,22,31,0.06);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(17,22,31,0.06), 0 10px 24px rgba(17,22,31,0.09);
+}
+/* Key chip styled like a physical keycap: top highlight + a hard bottom edge
+   for depth + a soft cast shadow. This is the app's signature visual. */
+.row .key {
+  flex: 0 0 auto;
+  min-width: 54px;
+  text-align: center;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.3px;
+  color: #fff;
+  background: linear-gradient(180deg, #5d84b9, var(--brand) 55%, var(--brand-ink));
+  border-radius: 8px;
+  padding: 9px 8px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.40),
+    inset 0 -1px 2px rgba(0,0,0,0.16),
+    0 2px 0 var(--brand-ink),
+    0 4px 8px rgba(var(--brand-rgb),0.32);
+}
+.row .prog {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.row .prog .name {
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row .prog .path {
+  font-size: 11px;
+  color: var(--ink-4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row .prog .unset { color: var(--ink-4); font-style: italic; }
+.row .actions { flex: 0 0 auto; display: flex; gap: 6px; }
+
+/* Keys that can't be registered as global hotkeys on this OS (e.g. F21–F24 on macOS). */
+.row-disabled { opacity: 0.55; }
+.row-disabled .key { filter: grayscale(0.7); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:disabled:hover { border-color: var(--line); color: var(--ink-2); }
+
+.hint { color: var(--ink-4); line-height: 1.6; margin-top: 16px; }
+
+/* ── Section labels ──────────────────────────────────────────────────────── */
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  margin: 18px 0 8px;
+}
+
+/* ── App icons ───────────────────────────────────────────────────────────── */
+.icon-slot { display: inline-flex; align-items: center; justify-content: center; }
+.app-icon { width: 20px; height: 20px; border-radius: 4px; object-fit: contain; }
+.icon-slot.big .app-icon { width: 34px; height: 34px; border-radius: 7px; }
+.prog-head { display: flex; align-items: center; gap: 8px; }
+
+/* ── Matrix view (mirrors the web configurator / generator look) ──────────── */
+.matrix-hint { color: var(--ink-4); font-size: 12px; margin: 0 0 12px; line-height: 1.5; }
+.matrix {
+  display: grid;
+  gap: 8px;
+  /* Hug the fixed-size cells instead of stretching them across the row. */
+  justify-content: start;
+  width: fit-content;
+  max-width: 100%;
+  /* Dashed, rounded container like the generator's shell outline. */
+  padding: 14px;
+  border: 1.5px dashed rgba(var(--brand-rgb), 0.40);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.35);
+  margin-bottom: 6px;
+  overflow-x: auto;
+}
+.mcell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;            /* generator --r */
+  border: 2px solid var(--line); /* generator 2px borders */
+  background: var(--surface-3, var(--surface-2));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+}
+/* Empty / non-Small-Deck cells: quiet grey slots (no affordance — read-only). */
+.mcell.empty { background: var(--surface-2); border-color: var(--line); opacity: 0.6; }
+.mcell.other { background: var(--surface-2); border-color: var(--line); opacity: 0.85; }
+/* Small Deck trigger cells: soft-blue "assigned" tint, matching the generator. */
+.mcell.fkey {
+  cursor: pointer;
+  background: var(--key-soft);
+  border-color: var(--key-line);
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+.mcell.fkey:hover {
+  border-color: var(--brand);
+  box-shadow: 0 1px 2px rgba(20,30,50,0.06);
+}
+.mcell.fkey.unsupported {
+  cursor: not-allowed;
+  border-color: var(--line);
+  background: var(--surface-2);
+  opacity: 0.55;
+}
+.mcell-key { font-size: 11px; font-weight: 700; color: var(--brand); font-variant-numeric: tabular-nums; }
+.mcell.unsupported .mcell-key { color: var(--ink-4); }
+.mcell-plus { font-size: 20px; color: var(--brand); line-height: 1; opacity: 0.7; }
+
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(17,22,31,0.42);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+}
+.modal {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 18px 20px;
+  width: 400px;
+  max-width: 92vw;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+}
+.modal-sm { width: 340px; }
+.modal-title {
+  font-size: 18px; font-weight: 800; color: var(--brand-ink);
+  margin-bottom: 12px;
+}
+
+/* Settings modal */
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  color: var(--ink-2);
+  font-size: 13px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--line-2);
+}
+.settings-about {
+  margin: 12px 0 16px;
+  font-size: 12px;
+  color: var(--ink-4);
+}
+.settings-about .brand-mark { font-size: 12px; letter-spacing: 0.4px; color: var(--brand-ink); }
+.modal-body { min-height: 48px; margin-bottom: 14px; }
+.modal-body .path { font-size: 11px; color: var(--ink-4); word-break: break-all; margin-top: 4px; }
+.modal-body .name { font-weight: 600; }
+
+.modal-types { margin-bottom: 12px; }
+.modal-types-label { display: block; font-size: 12px; color: var(--ink-3); margin-bottom: 6px; }
+.modal-types-row { display: flex; gap: 6px; }
+.modal-types-row .btn { flex: 1 1 0; min-width: 0; padding: 6px 4px; text-align: center; }
+
+.modal-url { display: flex; gap: 8px; margin-bottom: 14px; }
+.modal-cmd { display: flex; gap: 8px; margin-bottom: 14px; align-items: flex-start; }
+.modal-url input,
+.modal-cmd textarea {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--ink);
+  font-family: inherit;
+}
+.modal-cmd textarea {
+  resize: vertical;
+  min-height: 64px;
+  line-height: 1.5;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+.modal-url input:focus,
+.modal-cmd textarea:focus { outline: none; border-color: var(--brand); }
+
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+.icon-slot.glyph { font-size: 18px; }
+.icon-slot.big.glyph { font-size: 30px; }
