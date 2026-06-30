@@ -50,6 +50,7 @@ function isSupported(fkey) { return !supportedKeys || supportedKeys.has(fkey); }
 function openExternal(url) {
   invoke('open_external', { url }).catch(e => setStatus(String(e), 'err'));
 }
+window.openExternal = openExternal;
 
 // ── Sidebar view switching (Small Deck launcher ⇄ embedded Home / Docs) ─────
 const VIEW_URLS = {
@@ -140,6 +141,7 @@ async function readDevice(showErrors) {
   }
   render();
 }
+window.readDevice = readDevice;
 
 // ── Render ───────────────────────────────────────────────────────────────────
 let deckMode = 'matrix'; // 'matrix' | 'list'
@@ -167,12 +169,14 @@ function updateDeckChrome() {
   const keys = visibleKeys();
   const empty = !hasDevice && keys.length === 0;
 
-  // Drop a stale selection: if the selected key is no longer shown (device
-  // unplugged, list narrowed, or empty state), close the docked inspector so it
-  // can't linger as an orphaned panel.
-  if (modalKey && !keys.includes(modalKey) && !deviceKeys.includes(modalKey)) {
+  // Drop a stale selection only when the inspector is currently closed.
+  // If the inspector is already open, the selection was made deliberately by the
+  // user and should not be silently dropped by background render cycles (e.g. a
+  // boot-time readDevice that completes after the user has already started
+  // interacting with the UI).
+  const inspectorOpen = document.getElementById('inspector').style.display !== 'none';
+  if (!inspectorOpen && modalKey && !keys.includes(modalKey) && !deviceKeys.includes(modalKey)) {
     modalKey = null;
-    document.getElementById('inspector').style.display = 'none';
   }
 
   document.getElementById('empty-state').style.display = empty ? 'flex' : 'none';
@@ -310,6 +314,12 @@ function renderList() {
 
 // ── Docked inspector (configure the selected key in place) ──────────────────
 function openModal(fkey) {
+  // Idempotent: if the same key is already selected, just make sure the
+  // inspector is visible (avoid a full re-render that could race with
+  // background async work).
+  if (modalKey === fkey && document.getElementById('inspector').style.display === 'flex') {
+    return;
+  }
   modalKey = fkey;
   document.getElementById('modal-title').textContent = fkey;
   render();              // re-render to highlight the selected cell/row
@@ -419,6 +429,19 @@ async function initAutostart() {
   } catch (e) { /* ignore */ }
 }
 
+// ── Window controls (custom title bar on Windows / Linux) ────────────────────
+window.minimizeWindow = function () {
+  invoke('plugin:window|minimize').catch(() => {});
+};
+window.toggleMaximize = function () {
+  invoke('plugin:window|toggle_maximize').catch(() => {});
+};
+window.closeWindow = function () {
+  // Mirror the existing close-to-tray behaviour: hide the window instead of
+  // quitting, so the global hotkeys keep working in the background.
+  invoke('plugin:window|hide').catch(() => {});
+};
+
 // ── Boot ──────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // CSP-safe event wiring: inline on* handlers are blocked in the bundled build
@@ -436,10 +459,14 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // Show one inline input (url or command) at a time; hide the other.
   function toggleBox(showId, hideId, inputId) {
+    if (!modalKey) return; // inspector closed; ignore
     const show = document.getElementById(showId);
-    document.getElementById(hideId).style.display = 'none';
+    const hide = document.getElementById(hideId);
+    const input = document.getElementById(inputId);
+    if (!show || !hide || !input) return;
+    hide.style.display = 'none';
     show.style.display = show.style.display === 'none' ? 'flex' : 'none';
-    if (show.style.display === 'flex') document.getElementById(inputId).focus();
+    if (show.style.display === 'flex') input.focus();
   }
   document.getElementById('t-program').onclick = () => { if (modalKey) pickFile(modalKey, 'app'); };
   document.getElementById('t-folder').onclick  = () => { if (modalKey) pickFile(modalKey, 'folder'); };
