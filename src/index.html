@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,8 +7,22 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Full-width draggable titlebar strip (traffic lights float over its left). -->
-  <div class="titlebar" data-tauri-drag-region></div>
+  <!-- Full-width draggable titlebar strip. On macOS traffic lights float
+       over its left; on Windows / Linux it carries custom window controls. -->
+  <div class="titlebar" data-tauri-drag-region>
+    <span class="titlebar-label">Small Deck</span>
+    <div class="win-ctrl">
+      <button class="win-btn win-min" data-act="minimizeWindow" aria-label="Minimize">
+        <svg viewBox="0 0 12 12"><rect x="2" y="5.5" width="8" height="1" fill="currentColor"/></svg>
+      </button>
+      <button class="win-btn win-max" data-act="toggleMaximize" aria-label="Maximize">
+        <svg viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+      </button>
+      <button class="win-btn win-close" data-act="closeWindow" aria-label="Close">
+        <svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
 
   <div class="app">
     <!-- ── Left sidebar: a floating panel (Claude-desktop style) ──────────── -->
